@@ -1,0 +1,172 @@
+-- Создание базы данных
+CREATE DATABASE IF NOT EXISTS cinema_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE cinema_db;
+
+-- 1. Таблица локаций (корпусов)
+CREATE TABLE locations (
+    location_id INT PRIMARY KEY AUTO_INCREMENT,
+    location_name VARCHAR(100) NOT NULL,
+    address VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. Таблица залов
+CREATE TABLE halls (
+    hall_id INT PRIMARY KEY AUTO_INCREMENT,
+    location_id INT NOT NULL,
+    hall_name VARCHAR(50) NOT NULL,
+    capacity INT NOT NULL CHECK (capacity > 0),
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (location_id) REFERENCES locations(location_id) ON DELETE CASCADE,
+    UNIQUE KEY unique_hall_per_location (location_id, hall_name)
+);
+
+-- 3. Таблица фильмов
+CREATE TABLE films (
+    film_id INT PRIMARY KEY AUTO_INCREMENT,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    duration INT NOT NULL CHECK (duration > 0),
+    age_rating VARCHAR(10),
+    release_year INT,
+    genre VARCHAR(100),
+    poster_url VARCHAR(500),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_title (title),
+    INDEX idx_release_year (release_year)
+);
+
+-- 4. Таблица сеансов
+CREATE TABLE sessions (
+    session_id INT PRIMARY KEY AUTO_INCREMENT,
+    film_id INT NOT NULL,
+    hall_id INT NOT NULL,
+    start_time DATETIME NOT NULL,
+    end_time DATETIME NOT NULL,
+    base_price DECIMAL(10, 2) NOT NULL CHECK (base_price >= 0),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (film_id) REFERENCES films(film_id) ON DELETE CASCADE,
+    FOREIGN KEY (hall_id) REFERENCES halls(hall_id) ON DELETE CASCADE,
+    INDEX idx_start_time (start_time),
+    INDEX idx_film_hall (film_id, hall_id),
+    CHECK (end_time > start_time)
+);
+
+-- 5. Таблица мест
+CREATE TABLE seats (
+    seat_id INT PRIMARY KEY AUTO_INCREMENT,
+    hall_id INT NOT NULL,
+    row_number INT NOT NULL CHECK (row_number > 0),
+    seat_number INT NOT NULL CHECK (seat_number > 0),
+    type ENUM('standard', 'vip', 'disabled') DEFAULT 'standard',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (hall_id) REFERENCES halls(hall_id) ON DELETE CASCADE,
+    UNIQUE KEY unique_seat_per_hall (hall_id, row_number, seat_number)
+);
+
+-- 6. Таблица пользователей
+CREATE TABLE users (
+    user_id INT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    email VARCHAR(100) UNIQUE,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    role ENUM('admin', 'cashier', 'customer') DEFAULT 'customer',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_username (username),
+    INDEX idx_email (email)
+);
+
+-- 7. Таблица билетов
+CREATE TABLE tickets (
+    ticket_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    session_id INT NOT NULL,
+    seat_id INT NOT NULL,
+    price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
+    status ENUM('sold', 'booked', 'cancelled') DEFAULT 'sold',
+    sold_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    qr_code VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (session_id) REFERENCES sessions(session_id) ON DELETE CASCADE,
+    FOREIGN KEY (seat_id) REFERENCES seats(seat_id) ON DELETE CASCADE,
+    UNIQUE KEY unique_ticket_per_session_seat (session_id, seat_id),
+    INDEX idx_user_id (user_id),
+    INDEX idx_session_id (session_id)
+);
+
+-- 8. Таблица оценок пользователей
+CREATE TABLE user_ratings (
+    rating_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    film_id INT NOT NULL,
+    rating TINYINT NOT NULL CHECK (rating >= 1 AND rating <= 10),
+    rated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (film_id) REFERENCES films(film_id) ON DELETE CASCADE,
+    UNIQUE KEY unique_rating_per_user_film (user_id, film_id),
+    INDEX idx_film_id (film_id)
+);
+
+-- 9. Таблица отзывов
+CREATE TABLE reviews (
+    review_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    film_id INT NOT NULL,
+    review_text TEXT NOT NULL,
+    review_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_approved BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (film_id) REFERENCES films(film_id) ON DELETE CASCADE,
+    INDEX idx_film_id (film_id),
+    INDEX idx_user_id (user_id)
+);
+
+-- 10. Таблица продаж (опционально)
+CREATE TABLE sales (
+    sale_id INT PRIMARY KEY AUTO_INCREMENT,
+    ticket_id INT NOT NULL,
+    user_id INT NOT NULL, -- кассир
+    payment_method ENUM('cash', 'card', 'online') DEFAULT 'cash',
+    sale_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ticket_id) REFERENCES tickets(ticket_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    INDEX idx_sale_time (sale_time)
+);
+
+-- 11. Представление для истории просмотров
+CREATE VIEW user_watch_history AS
+SELECT
+    t.ticket_id,
+    t.user_id,
+    s.film_id,
+    t.session_id,
+    s.start_time as session_start_time,
+    s.end_time as session_end_time,
+    t.sold_at,
+    f.title as film_title
+FROM tickets t
+JOIN sessions s ON t.session_id = s.session_id
+JOIN films f ON s.film_id = f.film_id
+WHERE t.status = 'sold'
+  AND s.end_time < NOW();
+
+-- Вставка тестовых данных
+INSERT INTO locations (location_name, address) VALUES
+('ТРЦ Галерея', 'ул. Центральная, 1'),
+('Кинотеатр Победа', 'ул. Советская, 25');
+
+INSERT INTO halls (location_id, hall_name, capacity, description) VALUES
+(1, 'Красный зал', 150, 'Зал с панорамным экраном'),
+(1, 'Синий зал', 100, '3D кинозал'),
+(2, 'Основной зал', 200, 'Исторический зал с ретро-атмосферой');
+
+INSERT INTO users (username, password_hash, email, first_name, last_name, role) VALUES
+('admin', '$2b$10$exampleHash1234567890', 'admin@cinema.ru', 'Иван', 'Петров', 'admin'),
+('cashier1', '$2b$10$exampleHash1234567891', 'cashier@cinema.ru', 'Мария', 'Сидорова', 'cashier'),
+('customer1', '$2b$10$exampleHash1234567892', 'customer@mail.ru', 'Алексей', 'Иванов', 'customer');
