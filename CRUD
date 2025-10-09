@@ -1,0 +1,140 @@
+--CREATE
+
+
+-- Создание пользователя
+INSERT INTO user (us_name, us_email, us_nls, us_pass) 
+VALUES ('ivanov', 'ivan@mail.ru', 'Иван Иванов', 'pass123');
+
+-- Создание локации
+INSERT INTO positions (l_name, address) 
+VALUES ('ТРЦ Галерея', 'ул. Центральная 1');
+
+-- Создание зала
+INSERT INTO has (i_id, h_name, capacity) 
+VALUES (1, 'Красный зал', 150);
+
+-- Создание фильма
+INSERT INTO fin (f_idle, f_about, f_time, f_tating, f_release, f_genre) 
+VALUES ('Интерстеллар', 'Фантастика о космосе', 169, 9, 2014, 'фантастика');
+
+-- Создание сеанса
+INSERT INTO session (h_id, f_id, s_start, s_end, s_broise) 
+VALUES (1, 1, '2024-01-15 18:00:00', '2024-01-15 21:00:00', 350);
+
+-- Создание места
+INSERT INTO seats (h_id, seat_row, seat_num, seat_type) 
+VALUES (1, 1, 1, 'standard');
+
+-- Создание билета
+INSERT INTO tokens (us_id, s_id, seat_id, L_price, t_s, L_code) 
+VALUES (1, 1, 1, 350, 'sold', 'QR123456');
+
+-- Создание оценки
+INSERT INTO ratings (f_id, us_id, rating) 
+VALUES (1, 1, 9);
+
+-- Создание отзыва
+INSERT INTO reviews (f_id, us_id, re_text, re_date, re_spproved) 
+VALUES (1, 1, 'Отличный фильм!', '2024-01-15', 'approved');
+
+
+--READE
+-- Чтение всех пользователей
+SELECT * FROM user;
+
+-- Чтение пользователя по ID
+SELECT * FROM user WHERE us_id = 1;
+
+-- Чтение пользователя по email
+SELECT * FROM user WHERE us_email = 'ivan@mail.ru';
+
+-- Чтение фильмов с рейтингом выше 8
+SELECT * FROM fin WHERE f_tating > 8;
+
+-- Чтение сеансов на сегодня
+SELECT * FROM session WHERE DATE(s_start) = CURDATE();
+
+-- Чтение свободных мест на сеанс
+SELECT s.* FROM seats s 
+WHERE s.h_id = 1 
+AND s.seat_id NOT IN (
+    SELECT t.seat_id FROM tokens t 
+    WHERE t.s_id = 1 AND t.t_s = 'sold'
+);
+
+-- Чтение билетов пользователя
+SELECT t.*, f.f_idle, s.s_start, h.h_name 
+FROM tokens t
+JOIN session s ON t.s_id = s.s_id
+JOIN fin f ON s.f_id = f.f_id
+JOIN has h ON s.h_id = h.h_id
+WHERE t.us_id = 1;
+
+-- Чтение отзывов к фильму
+SELECT r.*, u.us_name 
+FROM reviews r
+JOIN user u ON r.us_id = u.us_id
+WHERE r.f_id = 1 AND r.re_spproved = 'approved';
+
+--UPDATE
+
+-- Обновление данных пользователя
+UPDATE user 
+SET us_name = 'new_username', us_email = 'new@mail.ru' 
+WHERE us_id = 1;
+
+-- Обновление пароля пользователя
+UPDATE user 
+SET us_pass = 'newpassword' 
+WHERE us_id = 1;
+
+-- Обновление цены билета
+UPDATE tokens 
+SET L_price = 400 
+WHERE t_id = 1;
+
+-- Обновление статуса билета
+UPDATE tokens 
+SET t_s = 'cancelled' 
+WHERE t_id = 1;
+
+-- Обновление рейтинга фильма
+UPDATE fin 
+SET f_tating = 8 
+WHERE f_id = 1;
+
+-- Обновление статуса отзыва
+UPDATE reviews 
+SET re_spproved = 'approved' 
+WHERE re_id = 1;
+
+-- Обновление информации о зале
+UPDATE has 
+SET capacity = 200, h_name = 'Обновленный зал' 
+WHERE h_id = 1;
+
+--DELETE
+
+-- Удаление пользователя
+DELETE FROM user WHERE us_id = 1;
+
+-- Удаление билета
+DELETE FROM tokens WHERE t_id = 1;
+
+-- Удаление отзыва
+DELETE FROM reviews WHERE re_id = 1;
+
+-- Удаление оценки
+DELETE FROM ratings WHERE rat_id = 1;
+
+-- Удаление сеанса
+DELETE FROM session WHERE s_id = 1;
+
+-- Удаление фильма
+DELETE FROM fin WHERE f_id = 1;
+
+-- Удаление зала
+DELETE FROM has WHERE h_id = 1;
+
+-- Удаление локации
+DELETE FROM positions WHERE i_id = 1;
