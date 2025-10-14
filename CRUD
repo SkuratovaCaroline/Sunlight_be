@@ -34,7 +34,7 @@ INSERT INTO ratings (f_id, us_id, rating)
 VALUES (1, 1, 9);
 
 -- Создание отзыва
-INSERT INTO reviews (f_id, us_id, re_text, re_date, re_spproved) 
+INSERT INTO reviews (f_id, us_id, re_text, re_date, re_spproved)
 VALUES (1, 1, 'Отличный фильм!', '2024-01-15', 'approved');
 
 
@@ -58,12 +58,12 @@ SELECT * FROM session WHERE DATE(s_start) = CURDATE();
 SELECT s.* FROM seats s 
 WHERE s.h_id = 1 
 AND s.seat_id NOT IN (
-    SELECT t.seat_id FROM tokens t 
+    SELECT t.seat_id FROM tokens t
     WHERE t.s_id = 1 AND t.t_s = 'sold'
 );
 
 -- Чтение билетов пользователя
-SELECT t.*, f.f_idle, s.s_start, h.h_name 
+SELECT t.*, f.f_idle, s.s_start, h.h_name
 FROM tokens t
 JOIN session s ON t.s_id = s.s_id
 JOIN fin f ON s.f_id = f.f_id
@@ -71,7 +71,7 @@ JOIN has h ON s.h_id = h.h_id
 WHERE t.us_id = 1;
 
 -- Чтение отзывов к фильму
-SELECT r.*, u.us_name 
+SELECT r.*, u.us_name
 FROM reviews r
 JOIN user u ON r.us_id = u.us_id
 WHERE r.f_id = 1 AND r.re_spproved = 'approved';
@@ -110,7 +110,7 @@ WHERE re_id = 1;
 
 -- Обновление информации о зале
 UPDATE has 
-SET capacity = 200, h_name = 'Обновленный зал' 
+SET capacity = 200, h_name = 'Обновленный зал'
 WHERE h_id = 1;
 
 --DELETE

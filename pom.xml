@@ -23,19 +23,31 @@
     </properties>
 
     <dependencies>
+<<<<<<< HEAD
         <!-- Основной Spring Boot Web -->
+=======
+        <!-- ✅ Основной Spring Boot Web -->
+>>>>>>> f112f53 (писание моих изменений)
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+<<<<<<< HEAD
         <!-- Для тестов -->
+=======
+        <!-- ✅ Для тестов -->
+>>>>>>> f112f53 (писание моих изменений)
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
 
+<<<<<<< HEAD
+=======
+        <!-- ✅ Добавляем недостающий servlet-api -->
+>>>>>>> f112f53 (писание моих изменений)
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
@@ -57,9 +69,15 @@
         </plugins>
     </build>
 
+<<<<<<< HEAD
     <!-- Два профиля: dev и prod -->
     <profiles>
         <!-- dev — запуск из IntelliJ -->
+=======
+    <!-- ✅ Два профиля: dev и prod -->
+    <profiles>
+        <!-- 🌱 dev — запуск из IntelliJ -->
+>>>>>>> f112f53 (писание моих изменений)
         <profile>
             <id>dev</id>
             <activation>
@@ -74,7 +92,11 @@
             </dependencies>
         </profile>
 
+<<<<<<< HEAD
         <!-- prod — для деплоя на Tomcat -->
+=======
+        <!-- 🚀 prod — для деплоя на Tomcat -->
+>>>>>>> f112f53 (писание моих изменений)
         <profile>
             <id>prod</id>
             <dependencies>

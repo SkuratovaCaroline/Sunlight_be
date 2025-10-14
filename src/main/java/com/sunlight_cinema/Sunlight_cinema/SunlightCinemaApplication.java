@@ -16,4 +16,8 @@ public class SunlightCinemaApplication extends SpringBootServletInitializer {
     public static void main(String[] args) {
         SpringApplication.run(SunlightCinemaApplication.class, args);
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> f112f53 (писание моих изменений)
