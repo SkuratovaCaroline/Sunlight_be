@@ -11,8 +11,5 @@ public class TestController {
     public String test() {
         return "Sunlight Cinema API is running!";
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> f112f53 (писание моих изменений)
+
