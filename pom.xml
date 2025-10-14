@@ -23,30 +23,53 @@
     </properties>
 
     <dependencies>
-        <!-- Основной Spring Boot Web -->
+
+        <!-- 🌐 Основной модуль для веб-приложения -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- Для тестов -->
+        <!-- 🧩 Поддержка работы с JPA (ORM через Hibernate) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- 🗄️ Драйвер PostgreSQL -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- 🔐 Валидация DTO и сущностей -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- 🧪 Для тестирования -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
 
+        <!-- ⚙️ Servlet API для деплоя на Tomcat -->
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
             <version>6.0.0</version>
             <scope>provided</scope>
         </dependency>
+
     </dependencies>
 
     <build>
         <finalName>sunlight-cinema</finalName>
         <plugins>
+            <!-- Плагин для сборки Spring Boot -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -74,7 +97,7 @@
             </dependencies>
         </profile>
 
-        <!-- prod — для деплоя на Tomcat -->
+        <!-- 🚀 prod — для деплоя на внешний Tomcat -->
         <profile>
             <id>prod</id>
             <dependencies>
