@@ -107,3 +107,35 @@ Backend-часть веб-сервиса для бронирования бил�
 | POST | `/api/users/watchlist/{fid}` | Добавить в запланированные | Зритель |
 | DELETE | `/api/users/watchlist/{fid}` | Удалить из запланированных | Зритель |
 | POST | `/api/users/watched/{fid}` | Отметить как просмотренный | Зритель |
+
+
+## 📘 Swagger API документация
+
+Проект использует [Swagger UI](https://swagger.io/tools/swagger-ui/) для автоматической генерации документации REST API.
+
+### 🔧 Как запустить Swagger UI
+
+1. Проект собран и запущен (`mvn spring-boot:run` или через IDE).
+2. Перейдите по адресу: [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+
+### 📂 Структура API
+
+- Все эндпоинты находятся в пакетах `com.sunlight_cinema.sunlight_cinema.controller`
+- Методы аннотированы `@Operation`, `@Parameter`, `@ApiResponse` для расширенного описания
+
+### 📤 Экспорт схемы OpenAPI
+
+Для получения схемы в формате JSON или YAML:
+
+- JSON: [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
+- YAML: [http://localhost:8080/v3/api-docs.yaml](http://localhost:8080/v3/api-docs.yaml)
+
+### 📦 Пример использования схемы
+
+Схему можно использовать для генерации клиента, например с помощью [OpenAPI Generator](https://openapi-generator.tech/):
+
+```bash
+openapi-generator-cli generate \
+  -i http://localhost:8080/v3/api-docs \
+  -g java \
+  -o ./generated-client
