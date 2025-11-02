@@ -1,5 +1,6 @@
 package com.sunlight_cinema.Sunlight_cinema.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -16,8 +17,10 @@ public class User {
     private String username;
 
     @Column(name = "password_hash", nullable = false)
+    @JsonIgnore                     // скрываем хеш пароля из JSON‑ответов
     private String passwordHash;
 
+    @Column(unique = true)
     private String email;
 
     @Column(name = "first_name")
@@ -27,7 +30,8 @@ public class User {
     private String lastName;
 
     @Enumerated(EnumType.STRING)
-    private Role role = Role.customer;
+    @Column(columnDefinition = "varchar(20)", nullable = false)
+    private Role role;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -35,25 +39,47 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    /** Роли пользователя */
     public enum Role {
-        admin, cashier, customer
+        ADMIN, MODERATOR, USER, GUEST
     }
 
-    //Конструкторы
+    /* --------------------------------------------------------------------- *
+     *  Автоматическое заполнение дат создания/обновления
+     * --------------------------------------------------------------------- */
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    /* --------------------------------------------------------------------- *
+     *  Конструкторы
+     * --------------------------------------------------------------------- */
     public User() {}
 
-    public User(String username, String passwordHash, String email, String firstName, String lastName, Role role) {
+    public User(String username,
+                String passwordHash,
+                String email,
+                String firstName,
+                String lastName,
+                Role role) {
         this.username = username;
         this.passwordHash = passwordHash;
         this.email = email;
         this.firstName = firstName;
         this.lastName = lastName;
         this.role = role;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
     }
 
-    //Геттеры и сеттеры
+    /* --------------------------------------------------------------------- *
+     *  Геттеры и сеттеры
+     * --------------------------------------------------------------------- */
     public Long getId() {
         return id;
     }
@@ -126,14 +152,20 @@ public class User {
         this.updatedAt = updatedAt;
     }
 
-    //для логов
+    /* --------------------------------------------------------------------- *
+     *  toString (для логов)
+     * --------------------------------------------------------------------- */
     @Override
     public String toString() {
         return "User{" +
                 "id=" + id +
                 ", username='" + username + '\'' +
                 ", email='" + email + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
                 ", role=" + role +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
                 '}';
     }
 }

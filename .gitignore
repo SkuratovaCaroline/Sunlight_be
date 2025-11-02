@@ -56,3 +56,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Логи ###
+auth-service/log/
+*.log

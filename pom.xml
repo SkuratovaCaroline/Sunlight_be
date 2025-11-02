@@ -1,121 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.6</version>
-        <relativePath/>
-    </parent>
-
     <groupId>com.sunlight_cinema</groupId>
-    <artifactId>Sunlight_cinema</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>Sunlight_cinema</name>
-    <description>Spring Boot application for Sunlight Cinema</description>
-    <packaging>war</packaging>
+    <artifactId>sunlight-be</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>
+
+    <name>Sunlight Cinema Backend</name>
+
+    <modules>
+        <module>auth-service</module>
+        <module>auth-client-console</module>
+    </modules>
 
     <properties>
         <java.version>17</java.version>
+        <spring.boot.version>3.5.6</spring.boot.version>
     </properties>
 
-    <dependencies>
-         
-
-        <!-- 🌐 Основной модуль для веб-приложения -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-         <!-- swagger-->
-         <dependency>
-             <groupId>org.springdoc</groupId>
-             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-             <version>2.1.0</version>
-         </dependency>
-
-
-        <!-- 🧩 Поддержка работы с JPA (ORM через Hibernate) -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
-        </dependency>
-
-        <!-- 🗄️ Драйвер PostgreSQL -->
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-
-        <!-- 🔐 Валидация DTO и сущностей -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-validation</artifactId>
-        </dependency>
-
-        <!-- 🧪 Для тестирования -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- ⚙️ Servlet API для деплоя на Tomcat -->
-        <dependency>
-            <groupId>jakarta.servlet</groupId>
-            <artifactId>jakarta.servlet-api</artifactId>
-            <version>6.0.0</version>
-            <scope>provided</scope>
-        </dependency>
-
-    </dependencies>
-
-    <build>
-        <finalName>sunlight-cinema</finalName>
-        <plugins>
-            <!-- Плагин для сборки Spring Boot -->
-            <plugin>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
                 <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <mainClass>com.sunlight_cinema.Sunlight_cinema.SunlightCinemaApplication</mainClass>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-
-    <!-- Два профиля: dev и prod -->
-    <profiles>
-        <!-- 🌱 dev — запуск из IntelliJ -->
-        <profile>
-            <id>dev</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <dependencies>
-                <!-- встроенный Tomcat включён -->
-                <dependency>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-tomcat</artifactId>
-                </dependency>
-            </dependencies>
-        </profile>
-
-        <!-- 🚀 prod — для деплоя на внешний Tomcat -->
-        <profile>
-            <id>prod</id>
-            <dependencies>
-                <dependency>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-tomcat</artifactId>
-                    <scope>provided</scope>
-                </dependency>
-            </dependencies>
-        </profile>
-    </profiles>
-
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring.boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 </project>

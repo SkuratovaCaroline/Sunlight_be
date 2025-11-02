@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: sunlight-cinema-auth
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/cinema_db
+    username: postgres
+    password:               # пустой — trust
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  sql:
+    init:
+      mode: always
+
+server:
+  port: 8080
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+  api-docs:
+    path: /v3/api-docs
