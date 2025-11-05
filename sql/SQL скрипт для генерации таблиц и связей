@@ -1,161 +1,149 @@
--- Создание базы данных
-CREATE DATABASE IF NOT EXISTS cinema_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE cinema_db;
+CREATE DATABASE cinema
+    WITH
+    OWNER = postgres
+    ENCODING = 'UTF8'
+    LC_COLLATE = 'Russian_Russia.1251'
+    LC_CTYPE = 'Russian_Russia.1251'
+    LOCALE_PROVIDER = 'libc'
+    TABLESPACE = pg_default
+    CONNECTION LIMIT = -1
+    IS_TEMPLATE = False;
 
--- 1. Таблица локаций (корпусов)
+
+
+-- Таблица locations (ID с 41)
 CREATE TABLE locations (
-    location_id INT PRIMARY KEY AUTO_INCREMENT,
-    location_name VARCHAR(100) NOT NULL,
-    address VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    l_id INTEGER PRIMARY KEY,
+    l_name VARCHAR(20),
+    l_address VARCHAR(20)
 );
 
--- 2. Таблица залов
+-- Таблица halls (ID с 31)
 CREATE TABLE halls (
-    hall_id INT PRIMARY KEY AUTO_INCREMENT,
-    location_id INT NOT NULL,
-    hall_name VARCHAR(50) NOT NULL,
-    capacity INT NOT NULL CHECK (capacity > 0),
-    description TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (location_id) REFERENCES locations(location_id) ON DELETE CASCADE,
-    UNIQUE KEY unique_hall_per_location (location_id, hall_name)
+    h_id INTEGER PRIMARY KEY,
+    h_name VARCHAR(20),
+    l_id INTEGER NOT NULL REFERENCES locations(l_id) ON DELETE CASCADE
 );
 
--- 3. Таблица фильмов
-CREATE TABLE films (
-    film_id INT PRIMARY KEY AUTO_INCREMENT,
-    title VARCHAR(255) NOT NULL,
-    description TEXT,
-    duration INT NOT NULL CHECK (duration > 0),
-    age_rating VARCHAR(10),
-    release_year INT,
-    genre VARCHAR(100),
-    poster_url VARCHAR(500),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_title (title),
-    INDEX idx_release_year (release_year)
+-- Таблица film (ID с 21)
+CREATE TABLE film (
+    f_id INTEGER PRIMARY KEY,
+    f_title VARCHAR(100),
+    f_about TEXT,
+    f_time INTEGER,
+    f_age_limit VARCHAR(4) CHECK (f_age_limit IN ('0+', '6+', '12+', '18+', '21+')),
+    f_release DATE,
+    f_end_date DATE
 );
 
--- 4. Таблица сеансов
+-- Таблица sessions (ID с 51)
 CREATE TABLE sessions (
-    session_id INT PRIMARY KEY AUTO_INCREMENT,
-    film_id INT NOT NULL,
-    hall_id INT NOT NULL,
-    start_time DATETIME NOT NULL,
-    end_time DATETIME NOT NULL,
-    base_price DECIMAL(10, 2) NOT NULL CHECK (base_price >= 0),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (film_id) REFERENCES films(film_id) ON DELETE CASCADE,
-    FOREIGN KEY (hall_id) REFERENCES halls(hall_id) ON DELETE CASCADE,
-    INDEX idx_start_time (start_time),
-    INDEX idx_film_hall (film_id, hall_id),
-    CHECK (end_time > start_time)
+    s_id INTEGER PRIMARY KEY,
+    f_id INTEGER NOT NULL REFERENCES film(f_id) ON DELETE CASCADE,
+    h_id INTEGER NOT NULL REFERENCES halls(h_id) ON DELETE CASCADE,
+    s_start_timestamp TIMESTAMP,
+    s_end_timestamp TIMESTAMP,
+    s_price INTEGER
 );
 
--- 5. Таблица мест
-CREATE TABLE seats (
-    seat_id INT PRIMARY KEY AUTO_INCREMENT,
-    hall_id INT NOT NULL,
-    row_number INT NOT NULL CHECK (row_number > 0),
-    seat_number INT NOT NULL CHECK (seat_number > 0),
-    type ENUM('standard', 'vip', 'disabled') DEFAULT 'standard',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (hall_id) REFERENCES halls(hall_id) ON DELETE CASCADE,
-    UNIQUE KEY unique_seat_per_hall (hall_id, row_number, seat_number)
+-- Таблица user (ID с 11)
+CREATE TABLE "user" (
+    u_id INTEGER PRIMARY KEY,
+    u_name VARCHAR(20),
+    u_surname VARCHAR(20),
+    u_email VARCHAR(20),
+    u_password VARCHAR(20)
 );
 
--- 6. Таблица пользователей
-CREATE TABLE users (
-    user_id INT PRIMARY KEY AUTO_INCREMENT,
-    username VARCHAR(50) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    email VARCHAR(100) UNIQUE,
-    first_name VARCHAR(50),
-    last_name VARCHAR(50),
-    role ENUM('admin', 'cashier', 'customer') DEFAULT 'customer',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_username (username),
-    INDEX idx_email (email)
+-- Таблица ratings (ID с 81)
+CREATE TABLE ratings (
+    r_id INTEGER PRIMARY KEY,
+    u_id INTEGER NOT NULL REFERENCES "user"(u_id) ON DELETE CASCADE,
+    f_id INTEGER NOT NULL REFERENCES film(f_id) ON DELETE CASCADE,
+    rating INTEGER CHECK (rating BETWEEN 1 AND 10)
 );
 
--- 7. Таблица билетов
-CREATE TABLE tickets (
-    ticket_id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL,
-    session_id INT NOT NULL,
-    seat_id INT NOT NULL,
-    price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
-    status ENUM('sold', 'booked', 'cancelled') DEFAULT 'sold',
-    sold_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    qr_code VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (session_id) REFERENCES sessions(session_id) ON DELETE CASCADE,
-    FOREIGN KEY (seat_id) REFERENCES seats(seat_id) ON DELETE CASCADE,
-    UNIQUE KEY unique_ticket_per_session_seat (session_id, seat_id),
-    INDEX idx_user_id (user_id),
-    INDEX idx_session_id (session_id)
-);
-
--- 8. Таблица оценок пользователей
-CREATE TABLE user_ratings (
-    rating_id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL,
-    film_id INT NOT NULL,
-    rating TINYINT NOT NULL CHECK (rating >= 1 AND rating <= 10),
-    rated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (film_id) REFERENCES films(film_id) ON DELETE CASCADE,
-    UNIQUE KEY unique_rating_per_user_film (user_id, film_id),
-    INDEX idx_film_id (film_id)
-);
-
--- 9. Таблица отзывов
+-- Таблица reviews (ID с 91)
 CREATE TABLE reviews (
-    review_id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL,
-    film_id INT NOT NULL,
-    review_text TEXT NOT NULL,
-    review_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    is_approved BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (film_id) REFERENCES films(film_id) ON DELETE CASCADE,
-    INDEX idx_film_id (film_id),
-    INDEX idx_user_id (user_id)
+    rv_id INTEGER PRIMARY KEY,
+    u_id INTEGER NOT NULL REFERENCES "user"(u_id) ON DELETE CASCADE,
+    f_id INTEGER NOT NULL REFERENCES film(f_id) ON DELETE CASCADE,
+    rv_text VARCHAR(200),
+    rv_date DATE,
+    rv_approved CHAR(1) CHECK (rv_approved IN ('Y', 'N'))
 );
 
+-- Таблица tickets (ID с 61)
+CREATE TABLE tickets (
+    t_id INTEGER PRIMARY KEY,
+    u_id INTEGER NOT NULL REFERENCES "user"(u_id) ON DELETE CASCADE,
+    s_id INTEGER NOT NULL REFERENCES sessions(s_id) ON DELETE CASCADE,
+    t_price INTEGER,
+    t_date DATE,
+    t_code VARCHAR(20),
+    t_status VARCHAR(20) DEFAULT 'продается' CHECK (t_status IN ('продается', 'зарезервировано', 'куплено'))
+);
 
--- 11. Представление для истории просмотров
-CREATE VIEW user_watch_history AS
-SELECT
-    t.ticket_id,
-    t.user_id,
-    s.film_id,
-    t.session_id,
-    s.start_time as session_start_time,
-    s.end_time as session_end_time,
-    t.sold_at,
-    f.title as film_title
-FROM tickets t
-JOIN sessions s ON t.session_id = s.session_id
-JOIN films f ON s.film_id = f.film_id
-WHERE t.status = 'sold'
-  AND s.end_time < NOW();
+-- Таблица seats (ID с 71)
+CREATE TABLE seats (
+    st_id INTEGER PRIMARY KEY,
+    h_id INTEGER NOT NULL REFERENCES halls(h_id) ON DELETE CASCADE,
+    seat_row INTEGER,
+    seat_num INTEGER,
+    seat_type VARCHAR(20)
+);
 
--- Вставка тестовых данных
-INSERT INTO locations (location_name, address) VALUES
-('ТРЦ Галерея', 'ул. Центральная, 1'),
-('Кинотеатр Победа', 'ул. Советская, 25');
+-- Таблица whistory (ID с 101)
+CREATE TABLE whistory (
+    w_id INTEGER PRIMARY KEY,
+    w_date DATE,
+    s_id INTEGER REFERENCES sessions(s_id) ON DELETE SET NULL
+);
 
-INSERT INTO halls (location_id, hall_name, capacity, description) VALUES
-(1, 'Красный зал', 150, 'Зал с панорамным экраном'),
-(1, 'Синий зал', 100, '3D кинозал'),
-(2, 'Основной зал', 200, 'Исторический зал с ретро-атмосферой');
+-- 2 локации
+INSERT INTO locations VALUES
+(41, 'Cinema Center', 'Lenina 10'),
+(42, 'MegaCinema', 'Pushkina 5');
 
-INSERT INTO users (username, password_hash, email, first_name, last_name, role) VALUES
-('admin', '$2b$10$exampleHash1234567890', 'admin@cinema.ru', 'Иван', 'Петров', 'admin'),
-('cashier1', '$2b$10$exampleHash1234567891', 'cashier@cinema.ru', 'Мария', 'Сидорова', 'cashier'),
-('customer1', '$2b$10$exampleHash1234567892', 'customer@mail.ru', 'Алексей', 'Иванов', 'customer');
+-- 10 залов
+INSERT INTO halls VALUES
+(31, 'Hall A', 41), (32, 'Hall B', 41), (33, 'Hall C', 41), (34, 'Hall D', 41), (35, 'Hall E', 41),
+(36, 'Hall F', 42), (37, 'Hall G', 42), (38, 'Hall H', 42), (39, 'Hall I', 42), (40, 'Hall J', 42);
+
+-- 10 пользователей
+INSERT INTO "user" VALUES
+(11, 'Anna', 'Ivanova', 'anna@example.com', 'pass1'),
+(12, 'Boris', 'Petrov', 'boris@example.com', 'pass2'),
+(13, 'Clara', 'Sidorova', 'clara@example.com', 'pass3'),
+(14, 'Dmitry', 'Kozlov', 'dmitry@example.com', 'pass4'),
+(15, 'Elena', 'Smirnova', 'elena@example.com', 'pass5'),
+(16, 'Fedor', 'Volkov', 'fedor@example.com', 'pass6'),
+(17, 'Galina', 'Orlova', 'galina@example.com', 'pass7'),
+(18, 'Igor', 'Lebedev', 'igor@example.com', 'pass8'),
+(19, 'Julia', 'Morozova', 'julia@example.com', 'pass9'),
+(110, 'Kirill', 'Nikolaev', 'kirill@example.com', 'pass10');
+
+-- 20 фильмов
+INSERT INTO film VALUES
+(21, 'Movie 1', 'About Movie 1', 120, '12+', '2025-10-01', '2025-12-01'),
+(22, 'Movie 2', 'About Movie 2', 90, '6+', '2025-10-02', '2025-12-02'),
+(23, 'Movie 3', 'About Movie 3', 110, '18+', '2025-10-03', '2025-12-03'),
+(24, 'Movie 4', 'About Movie 4', 95, '21+', '2025-10-04', '2025-12-04'),
+(25, 'Movie 5', 'About Movie 5', 130, '12+', '2025-10-05', '2025-12-05'),
+(26, 'Movie 6', 'About Movie 6', 100, '0+', '2025-10-06', '2025-12-06'),
+(27, 'Movie 7', 'About Movie 7', 105, '12+', '2025-10-07', '2025-12-07'),
+(28, 'Movie 8', 'About Movie 8', 115, '6+', '2025-10-08', '2025-12-08'),
+(29, 'Movie 9', 'About Movie 9', 85, '0+', '2025-10-09', '2025-12-09'),
+(210, 'Movie 10', 'About Movie 10', 125, '18+', '2025-10-10', '2025-12-10'),
+(211, 'Movie 11', 'About Movie 11', 120, '12+', '2025-10-11', '2025-12-11'),
+(212, 'Movie 12', 'About Movie 12', 90, '6+', '2025-10-12', '2025-12-12'),
+(213, 'Movie 13', 'About Movie 13', 110, '18+', '2025-10-13', '2025-12-13'),
+(214, 'Movie 14', 'About Movie 14', 95, '21+', '2025-10-14', '2025-12-14'),
+(215, 'Movie 15', 'About Movie 15', 130, '12+', '2025-10-15', '2025-12-15'),
+(216, 'Movie 16', 'About Movie 16', 100, '0+', '2025-10-16', '2025-12-16'),
+(217, 'Movie 17', 'About Movie 17', 105, '12+', '2025-10-17', '2025-12-17'),
+(218, 'Movie 18', 'About Movie 18', 115, '6+', '2025-10-18', '2025-12-18'),
+(219, 'Movie 19', 'About Movie 19', 85, '0+', '2025-10-19', '2025-12-19'),
+(220, 'Movie 20', 'About Movie 20', 125, '18+', '2025-10-20', '2025-12-20');
+
+
