@@ -1,4 +1,4 @@
-CREATE DATABASE cinema
+CREATE DATABASE sunlight_db
     WITH
     OWNER = postgres
     ENCODING = 'UTF8'
