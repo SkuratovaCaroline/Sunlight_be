@@ -9,8 +9,6 @@ CREATE DATABASE sunlight_db
     CONNECTION LIMIT = -1
     IS_TEMPLATE = False;
 
-
-
 -- Таблица locations (ID с 41)
 CREATE TABLE locations (
     l_id INTEGER PRIMARY KEY,
@@ -46,13 +44,14 @@ CREATE TABLE sessions (
     s_price INTEGER
 );
 
--- Таблица user (ID с 11)
+-- Таблица user (ID с 11) с добавленным u_role
 CREATE TABLE "user" (
     u_id INTEGER PRIMARY KEY,
     u_name VARCHAR(20),
     u_surname VARCHAR(20),
     u_email VARCHAR(20),
-    u_password VARCHAR(20)
+    u_password VARCHAR(20),
+    u_role VARCHAR(20) DEFAULT 'authus' CHECK (u_role IN ('authus', 'moder', 'admin'))
 );
 
 -- Таблица ratings (ID с 81)
@@ -100,14 +99,12 @@ CREATE TABLE whistory (
     s_id INTEGER REFERENCES sessions(s_id) ON DELETE SET NULL
 );
 
--- для хранения уведомлений всех
+-- Таблица notifications
 CREATE TABLE notifications (
-  id SERIAL PRIMARY KEY,
-  sender VARCHAR(255),
-  content TEXT,
-  timestamp TIMESTAMP
+    id SERIAL PRIMARY KEY,
+    content TEXT,
+    timestamp TIMESTAMP
 );
-
 
 -- 2 локации
 INSERT INTO locations VALUES
@@ -119,18 +116,18 @@ INSERT INTO halls VALUES
 (31, 'Hall A', 41), (32, 'Hall B', 41), (33, 'Hall C', 41), (34, 'Hall D', 41), (35, 'Hall E', 41),
 (36, 'Hall F', 42), (37, 'Hall G', 42), (38, 'Hall H', 42), (39, 'Hall I', 42), (40, 'Hall J', 42);
 
--- 10 пользователей
+-- 10 пользователей с ролями
 INSERT INTO "user" VALUES
-(11, 'Anna', 'Ivanova', 'anna@example.com', 'pass1'),
-(12, 'Boris', 'Petrov', 'boris@example.com', 'pass2'),
-(13, 'Clara', 'Sidorova', 'clara@example.com', 'pass3'),
-(14, 'Dmitry', 'Kozlov', 'dmitry@example.com', 'pass4'),
-(15, 'Elena', 'Smirnova', 'elena@example.com', 'pass5'),
-(16, 'Fedor', 'Volkov', 'fedor@example.com', 'pass6'),
-(17, 'Galina', 'Orlova', 'galina@example.com', 'pass7'),
-(18, 'Igor', 'Lebedev', 'igor@example.com', 'pass8'),
-(19, 'Julia', 'Morozova', 'julia@example.com', 'pass9'),
-(110, 'Kirill', 'Nikolaev', 'kirill@example.com', 'pass10');
+(11, 'Polina', 'Valkovskaya', 'polya.worker@gmail.com', 'polinapass', 'admin'),
+(12, 'Caroline', 'Skuratova', 'skuratova.c@gmail.com', '15052006pass', 'admin'),
+(13, 'Evgenia', 'Uvarova', 'zhnvrv05@gmail.com', 'evpass', 'moder'),
+(14, 'Dmitry', 'Kozlov', 'dmitry@example.com', 'pass4', 'authus'),
+(15, 'Elena', 'Smirnova', 'elena@example.com', 'pass5', 'authus'),
+(16, 'Fedor', 'Volkov', 'fedor@example.com', 'pass6', 'authus'),
+(17, 'Galina', 'Orlova', 'galina@example.com', 'pass7', 'authus'),
+(18, 'Igor', 'Lebedev', 'igor@example.com', 'pass8', 'authus'),
+(19, 'Julia', 'Morozova', 'julia@example.com', 'pass9', 'authus'),
+(110, 'Kirill', 'Nikolaev', 'kirill@example.com', 'pass10', 'authus');
 
 -- 20 фильмов
 INSERT INTO film VALUES
@@ -154,5 +151,3 @@ INSERT INTO film VALUES
 (218, 'Movie 18', 'About Movie 18', 115, '6+', '2025-10-18', '2025-12-18'),
 (219, 'Movie 19', 'About Movie 19', 85, '0+', '2025-10-19', '2025-12-19'),
 (220, 'Movie 20', 'About Movie 20', 125, '18+', '2025-10-20', '2025-12-20');
-
-
