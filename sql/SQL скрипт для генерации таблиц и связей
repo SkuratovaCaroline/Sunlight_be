@@ -100,6 +100,15 @@ CREATE TABLE whistory (
     s_id INTEGER REFERENCES sessions(s_id) ON DELETE SET NULL
 );
 
+-- для хранения уведомлений всех
+CREATE TABLE notifications (
+  id SERIAL PRIMARY KEY,
+  sender VARCHAR(255),
+  content TEXT,
+  timestamp TIMESTAMP
+);
+
+
 -- 2 локации
 INSERT INTO locations VALUES
 (41, 'Cinema Center', 'Lenina 10'),
