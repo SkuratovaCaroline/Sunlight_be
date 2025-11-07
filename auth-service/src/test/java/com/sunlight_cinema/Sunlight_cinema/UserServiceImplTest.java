@@ -55,7 +55,8 @@ class UserServiceImplTest {
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
             User u = invocation.getArgument(0);
             u.setId(1L);
-            u.setRole(User.Role.GUEST);
+            // ИСПРАВЛЕНО: Заменили GUEST на CUSTOMER
+            u.setRole(User.Role.CUSTOMER);
             return u;
         });
 
@@ -66,7 +67,8 @@ class UserServiceImplTest {
         assertNotNull(result.getId());
         assertEquals(username, result.getUsername());
         assertEquals(email, result.getEmail());
-        assertEquals(User.Role.GUEST, result.getRole());
+        // ИСПРАВЛЕНО: Заменили GUEST на CUSTOMER
+        assertEquals(User.Role.CUSTOMER, result.getRole());
         assertTrue(result.getPasswordHash().startsWith("ENCODED_"));
         verify(userRepository).save(any(User.class));
     }

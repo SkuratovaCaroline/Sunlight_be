@@ -13,7 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.Authentication;
 
 @Service
-//@Slf4j  // ← Включает log.trace(), log.info() и т.д.
+//@Slf4j
 public class UserServiceImpl implements UserService {
     private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
     private final UserRepository repo;
@@ -69,10 +69,11 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Пароль не может быть пустым");
         }
 
-        // Установка роли: GUEST по умолчанию
+        // Установка роли: customer по умолчанию
         if (user.getRole() == null) {
-            user.setRole(Role.GUEST);
-            log.info("INFO: Роль не указана — установлена GUEST для пользователя: {}", user.getUsername());
+            user.setRole(Role.CUSTOMER);
+            // ИСПРАВЛЕНО: Роль CUSTOMER установлена — меняем лог-сообщение с GUEST
+            log.info("INFO: Роль не указана — установлена CUSTOMER для пользователя: {}", user.getUsername());
         } else {
             log.debug("DEBUG: Указана роль: {} для пользователя: {}", user.getRole(), user.getUsername());
         }
@@ -100,11 +101,6 @@ public class UserServiceImpl implements UserService {
         // 1. Проверяем существование пользователя
         User existing = getById(id);  // уже логируется внутри getById()
 
-        // 2. Проверка: нельзя обновлять GUEST как обычного пользователя
-        if (existing.getRole() == Role.GUEST) {
-            log.warn("WARN: Попытка обновить пользователя с ролью GUEST (ID: {})", id);
-            throw new IllegalArgumentException("Нельзя обновлять неактивированного пользователя (GUEST)");
-        }
 
         // 3. Проверка username на уникальность (если меняется)
         if (updatedUser.getUsername() != null

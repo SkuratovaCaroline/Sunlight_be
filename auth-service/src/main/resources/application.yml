@@ -10,8 +10,14 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        type:
+          enum:
+            prefer_native_enum: true
 
   sql:
     init:
@@ -19,6 +25,7 @@ spring:
 
 server:
   port: 8080
+  address: 0.0.0.0
 
 springdoc:
   swagger-ui:

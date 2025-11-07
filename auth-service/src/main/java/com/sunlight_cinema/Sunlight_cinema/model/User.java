@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+
 @Entity
 @Table(name = "users")
 public class User {
@@ -29,8 +30,8 @@ public class User {
     @Column(name = "last_name")
     private String lastName;
 
+    @Column(name = "role", columnDefinition = "user_role", nullable = false)
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "varchar(20)", nullable = false)
     private Role role;
 
     @Column(name = "created_at")
@@ -41,8 +42,9 @@ public class User {
 
     /** Роли пользователя */
     public enum Role {
-        ADMIN, MODERATOR, USER, GUEST
+        ADMIN, MODERATOR, CUSTOMER
     }
+
 
     /* --------------------------------------------------------------------- *
      *  Автоматическое заполнение дат создания/обновления
