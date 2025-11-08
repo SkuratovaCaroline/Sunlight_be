@@ -4,15 +4,17 @@ import com.sunlight_cinema.Sunlight_cinema.dto.JwtResponse;
 import com.sunlight_cinema.Sunlight_cinema.dto.LoginRequest;
 import com.sunlight_cinema.Sunlight_cinema.dto.RegisterRequest;
 import com.sunlight_cinema.Sunlight_cinema.model.User;
+import com.sunlight_cinema.Sunlight_cinema.model.Role;
 import com.sunlight_cinema.Sunlight_cinema.service.JwtService;
 import com.sunlight_cinema.Sunlight_cinema.service.UserService;
+import com.sunlight_cinema.Sunlight_cinema.repository.RoleRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService; // Убедитесь, что этот импорт есть
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,20 +25,25 @@ public class AuthController {
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final UserDetailsService userDetailsService;
+    private final RoleRepository roleRepository;
 
     @Autowired
     private JwtService jwtService;
     @Autowired
     private AuthenticationManager authenticationManager;
 
-    public AuthController(UserService userService, PasswordEncoder passwordEncoder, UserDetailsService userDetailsService) {
+    public AuthController(UserService userService,
+                          PasswordEncoder passwordEncoder,
+                          UserDetailsService userDetailsService,
+                          RoleRepository roleRepository) {
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
         this.userDetailsService = userDetailsService;
+        this.roleRepository = roleRepository;
     }
 
     @PostMapping("/hello")
-    public String hello(){
+    public String hello() {
         return "Hello";
     }
 
@@ -48,7 +55,11 @@ public class AuthController {
         user.setEmail(request.email());
         user.setFirstName(request.firstName());
         user.setLastName(request.lastName());
-        user.setRole(User.Role.CUSTOMER);
+
+        // Устанавливаем роль CUSTOMER по умолчанию
+        Role customerRole = roleRepository.findByRoleName("CUSTOMER")
+                .orElseThrow(() -> new RuntimeException("Роль CUSTOMER не найдена в БД"));
+        user.setRole(customerRole);
 
         User created = userService.create(user);
         return ResponseEntity.ok(created);

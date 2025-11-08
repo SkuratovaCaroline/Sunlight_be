@@ -3,7 +3,7 @@ spring:
     name: sunlight-cinema-auth
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/cinema_db
+    url: jdbc:postgresql://localhost:5432/sunlight_db
     username: postgres
     password:               # пустой — trust
     driver-class-name: org.postgresql.Driver

@@ -1,7 +1,9 @@
 package com.sunlight_cinema.Sunlight_cinema;
 
 import com.sunlight_cinema.Sunlight_cinema.model.User;
+import com.sunlight_cinema.Sunlight_cinema.model.Role;
 import com.sunlight_cinema.Sunlight_cinema.repository.UserRepository;
+import com.sunlight_cinema.Sunlight_cinema.repository.RoleRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,84 +18,80 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@ActiveProfiles("test") // Использует настройки профиля test, если он существует
+@ActiveProfiles("test")
 public class UserDbConnectionTest {
 
     @Autowired
     private UserRepository userRepository;
 
-    // В интеграционных тестах сервисный слой не нужен, но нужно замокать
-    // PasswordEncoder, чтобы не получить ошибку "No bean of type PasswordEncoder found"
-    // если он используется в UserServiceImpl.
+    @Autowired
+    private RoleRepository roleRepository;
+
     @MockBean
     private PasswordEncoder passwordEncoder;
 
     @AfterEach
     public void cleanup() {
-        // Очищаем тестовые данные после каждого теста
         userRepository.deleteAll();
     }
 
     @Test
     @DisplayName("Проверка сохранения и чтения роли CUSTOMER из PostgreSQL")
     void shouldSaveAndRetrieveUserWithCustomerRole() {
-        // 1. Arrange (Подготовка)
+        // 1. Получаем роль CUSTOMER из таблицы roles
+        Role customerRole = roleRepository.findByRoleName("CUSTOMER")
+                .orElseThrow(() -> new RuntimeException("Role CUSTOMER not found in DB"));
+
+        // 2. Создаём пользователя
         String testUsername = "db_test_user";
         User user = new User();
         user.setUsername(testUsername);
         user.setEmail("db@test.com");
         user.setPasswordHash("hash123");
-        // Устанавливаем ENUM-значение в Java (CUSTOMER)
-        user.setRole(User.Role.CUSTOMER);
+        user.setRole(customerRole);
 
-        // 2. Act (Действие) - Сохранение в реальную БД
+        // 3. Сохраняем
         User savedUser = userRepository.save(user);
 
-        // 3. Assert (Проверка) - Проверка сохраненного объекта
+        // 4. Проверяем
         assertNotNull(savedUser.getId(), "ID пользователя должен быть сгенерирован");
-        assertEquals(User.Role.CUSTOMER, savedUser.getRole(), "Роль должна быть CUSTOMER в Java-объекте");
+        assertEquals("CUSTOMER", savedUser.getRole().getRoleName(), "Роль должна быть CUSTOMER");
 
-        // 4. Act - Считывание из БД (проверка конвертера)
+        // 5. Читаем обратно
         Optional<User> foundUserOptional = userRepository.findByUsername(testUsername);
-
-        // 5. Assert - Проверка считанного объекта
         assertTrue(foundUserOptional.isPresent(), "Пользователь должен быть найден в БД");
         User foundUser = foundUserOptional.get();
 
-        // Если этот assertEquals пройдет, это означает, что:
-        // 1. Hibernate успешно записал 'customer' (нижний регистр) в ENUM столбец.
-        // 2. RoleConverter успешно прочитал 'customer' и вернул User.Role.CUSTOMER (верхний регистр).
-        assertEquals(User.Role.CUSTOMER, foundUser.getRole(),
-                "Конвертер должен корректно вернуть Java ENUM CUSTOMER из БД");
+        assertEquals("CUSTOMER", foundUser.getRole().getRoleName(),
+                "Роль должна корректно читаться из БД");
     }
 
     @Test
     @DisplayName("Проверка сохранения и чтения роли ADMIN из PostgreSQL")
     void shouldSaveAndRetrieveUserWithAdminRole() {
-        // 1. Arrange (Подготовка)
+        // 1. Получаем роль ADMIN
+        Role adminRole = roleRepository.findByRoleName("ADMIN")
+                .orElseThrow(() -> new RuntimeException("Role ADMIN not found in DB"));
+
+        // 2. Создаём пользователя
         String testUsername = "db_admin_user";
         User user = new User();
         user.setUsername(testUsername);
         user.setEmail("admin@test.com");
         user.setPasswordHash("admin_hash");
-        // Устанавливаем роль ADMIN
-        user.setRole(User.Role.ADMIN);
+        user.setRole(adminRole);
 
-        // 2. Act (Действие) - Сохранение в реальную БД
+        // 3. Сохраняем
         userRepository.save(user);
 
-        // 3. Act - Считывание из БД
+        // 4. Читаем обратно
         Optional<User> foundUserOptional = userRepository.findByUsername(testUsername);
-
-        // 4. Assert - Проверка считанного объекта
         assertTrue(foundUserOptional.isPresent());
         User foundUser = foundUserOptional.get();
 
-        // Проверяем, что конвертер правильно обработал роль ADMIN
-        assertEquals(User.Role.ADMIN, foundUser.getRole(),
-                "Конвертер должен корректно вернуть Java ENUM ADMIN из БД");
+        assertEquals("ADMIN", foundUser.getRole().getRoleName(),
+                "Роль должна корректно читаться из БД");
     }
 }

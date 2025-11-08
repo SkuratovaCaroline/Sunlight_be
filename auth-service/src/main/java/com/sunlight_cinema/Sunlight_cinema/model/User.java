@@ -30,8 +30,8 @@ public class User {
     @Column(name = "last_name")
     private String lastName;
 
-    @Column(name = "role", columnDefinition = "user_role", nullable = false)
-    @Enumerated(EnumType.STRING)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 
     @Column(name = "created_at")
@@ -40,10 +40,6 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    /** Роли пользователя */
-    public enum Role {
-        ADMIN, MODERATOR, CUSTOMER
-    }
 
 
     /* --------------------------------------------------------------------- *

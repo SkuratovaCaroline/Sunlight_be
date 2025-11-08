@@ -14,7 +14,7 @@
     <modules>
         <module>auth-service</module>
         <module>auth-client-console</module>
-         <module>notification-service</module>  
+        <module>chat-service</module>
     </modules>
 
     <properties>

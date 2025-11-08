@@ -1,0 +1,206 @@
+
+-- 1. Таблица ролей
+CREATE TABLE roles (
+    role_id BIGSERIAL PRIMARY KEY,
+    role_name VARCHAR(50) UNIQUE NOT NULL
+);
+
+-- Заполняем начальными ролями
+INSERT INTO roles (role_name) VALUES
+('ADMIN'),
+('MODERATOR'),
+('CUSTOMER');
+
+-- 2. Таблица locations
+CREATE TABLE locations (
+    location_id BIGSERIAL PRIMARY KEY,
+    location_name VARCHAR(100),
+    address VARCHAR(255)
+);
+
+-- 3. Таблица users
+CREATE TABLE users (
+    user_id BIGSERIAL PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    email VARCHAR(100) UNIQUE,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    role_id BIGINT NOT NULL REFERENCES roles(role_id) ON DELETE RESTRICT,
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_username ON users (username);
+CREATE INDEX idx_email ON users (email);
+
+-- 4. Таблица halls
+CREATE TABLE halls (
+    hall_id BIGSERIAL PRIMARY KEY,
+    location_id BIGINT NOT NULL REFERENCES locations(location_id) ON DELETE CASCADE,
+    hall_name VARCHAR(50) NOT NULL,
+    capacity INT NOT NULL DEFAULT 100,
+    description TEXT,
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (location_id, hall_name)
+);
+
+-- 5. Таблица films
+CREATE TABLE films (
+    film_id BIGSERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    duration INT NOT NULL CHECK (duration > 0),
+    age_rating VARCHAR(10) CHECK (age_rating IN ('0+', '6+', '12+', '18+', '21+')),
+    release_year INT,
+    genre VARCHAR(100),
+    poster_url VARCHAR(500),
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    release_date DATE,
+    end_date DATE
+);
+
+CREATE INDEX idx_film_title ON films (title);
+CREATE INDEX idx_film_release_year ON films (release_year);
+
+-- 6. Таблица sessions
+CREATE TABLE sessions (
+    session_id BIGSERIAL PRIMARY KEY,
+    film_id BIGINT NOT NULL REFERENCES films(film_id) ON DELETE CASCADE,
+    hall_id BIGINT NOT NULL REFERENCES halls(hall_id) ON DELETE CASCADE,
+    start_time TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    end_time TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    base_price DECIMAL(10, 2) NOT NULL CHECK (base_price >= 0),
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CHECK (end_time > start_time)
+);
+
+CREATE INDEX idx_session_start_time ON sessions (start_time);
+CREATE INDEX idx_session_film_hall ON sessions (film_id, hall_id);
+
+-- 7. Таблица seats
+CREATE TABLE seats (
+    seat_id BIGSERIAL PRIMARY KEY,
+    hall_id BIGINT NOT NULL REFERENCES halls(hall_id) ON DELETE CASCADE,
+    row_number INT NOT NULL CHECK (row_number > 0),
+    seat_number INT NOT NULL CHECK (seat_number > 0),
+    type VARCHAR(20) DEFAULT 'standard',
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (hall_id, row_number, seat_number)
+);
+
+-- 8. Таблица tickets
+CREATE TABLE tickets (
+    ticket_id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    session_id BIGINT NOT NULL REFERENCES sessions(session_id) ON DELETE CASCADE,
+    seat_id BIGINT,
+    price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
+    status VARCHAR(20) DEFAULT 'sold',
+    sold_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    qr_code VARCHAR(255),
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (session_id, seat_id),
+    FOREIGN KEY (seat_id) REFERENCES seats(seat_id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_ticket_user_id ON tickets (user_id);
+CREATE INDEX idx_ticket_session_id ON tickets (session_id);
+
+-- 9. Таблица user_ratings
+CREATE TABLE user_ratings (
+    rating_id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    film_id BIGINT NOT NULL REFERENCES films(film_id) ON DELETE CASCADE,
+    rating SMALLINT NOT NULL CHECK (rating >= 1 AND rating <= 10),
+    rated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (user_id, film_id)
+);
+
+CREATE INDEX idx_rating_film_id ON user_ratings (film_id);
+
+-- 10. Таблица reviews
+CREATE TABLE reviews (
+    review_id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    film_id BIGINT NOT NULL REFERENCES films(film_id) ON DELETE CASCADE,
+    review_text TEXT NOT NULL,
+    review_date TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    is_approved BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_review_film_id ON reviews (film_id);
+CREATE INDEX idx_review_user_id ON reviews (user_id);
+
+-- 11. Таблица notifications
+CREATE TABLE notifications (
+    id SERIAL PRIMARY KEY,
+    content TEXT,
+    timestamp TIMESTAMP
+);
+
+-- 12. VIEW user_watch_history
+CREATE VIEW user_watch_history AS
+SELECT
+    t.ticket_id,
+    t.user_id,
+    s.film_id,
+    t.session_id,
+    s.start_time as session_start_time,
+    s.end_time as session_end_time,
+    t.sold_at,
+    f.title as film_title
+FROM tickets t
+JOIN sessions s ON t.session_id = s.session_id
+JOIN films f ON s.film_id = f.film_id
+WHERE t.status = 'sold'
+  AND s.end_time < CURRENT_TIMESTAMP;
+
+
+-- 2. Локации
+INSERT INTO locations (location_id, location_name, address) VALUES
+(41, 'Cinema Center', 'Lenina 10'),
+(42, 'MegaCinema', 'Pushkina 5');
+
+-- 3. Залы
+INSERT INTO halls (hall_id, hall_name, location_id, capacity) VALUES
+(31, 'Hall A', 41, 100), (32, 'Hall B', 41, 100), (33, 'Hall C', 41, 100), (34, 'Hall D', 41, 100), (35, 'Hall E', 41, 100),
+(36, 'Hall F', 42, 100), (37, 'Hall G', 42, 100), (38, 'Hall H', 42, 100), (39, 'Hall I', 42, 100), (40, 'Hall J', 42, 100);
+
+-- 4. Пользователи
+INSERT INTO users (user_id, first_name, last_name, email, password_hash, username, role_id) VALUES
+(11, 'Polina', 'Valkovskaya', 'polya.worker@gmail.com', '$2b$10$exampleHash1111111111', 'Polina', 1), -- ADMIN
+(12, 'Caroline', 'Skuratova', 'skuratova.c@gmail.com', '$2b$10$exampleHash2222222222', 'Caroline', 1), -- ADMIN
+(13, 'Evgenia', 'Uvarova', 'zhnvrv05@gmail.com', '$2b$10$exampleHash3333333333', 'Evgenia', 2), -- MODERATOR
+(14, 'Dmitry', 'Kozlov', 'dmitry@example.com', '$2b$10$exampleHash4444444444', 'Dmitry', 3), -- CUSTOMER
+(15, 'Elena', 'Smirnova', 'elena@example.com', '$2b$10$exampleHash5555555555', 'Elena', 3),
+(16, 'Fedor', 'Volkov', 'fedor@example.com', '$2b$10$exampleHash6666666666', 'Fedor', 3),
+(17, 'Galina', 'Orlova', 'galina@example.com', '$2b$10$exampleHash7777777777', 'Galina', 3),
+(18, 'Igor', 'Lebedev', 'igor@example.com', '$2b$10$exampleHash8888888888', 'Igor', 3),
+(19, 'Julia', 'Morozova', 'julia@example.com', '$2b$10$exampleHash9999999999', 'Julia', 3),
+(110, 'Kirill', 'Nikolaev', 'kirill@example.com', '$2b$10$exampleHash0000000000', 'Kirill', 3);
+
+-- 5. Фильмы
+INSERT INTO films (film_id, title, description, duration, age_rating, release_date, end_date) VALUES
+(21, 'Movie 1', 'About Movie 1', 120, '12+', '2025-10-01', '2025-12-01'),
+(22, 'Movie 2', 'About Movie 2', 90, '6+', '2025-10-02', '2025-12-02'),
+(23, 'Movie 3', 'About Movie 3', 110, '18+', '2025-10-03', '2025-12-03'),
+(24, 'Movie 4', 'About Movie 4', 95, '21+', '2025-10-04', '2025-12-04'),
+(25, 'Movie 5', 'About Movie 5', 130, '12+', '2025-10-05', '2025-12-05'),
+(26, 'Movie 6', 'About Movie 6', 100, '0+', '2025-10-06', '2025-12-06'),
+(27, 'Movie 7', 'About Movie 7', 105, '12+', '2025-10-07', '2025-12-07'),
+(28, 'Movie 8', 'About Movie 8', 115, '6+', '2025-10-08', '2025-12-08'),
+(29, 'Movie 9', 'About Movie 9', 85, '0+', '2025-10-09', '2025-12-09'),
+(210, 'Movie 10', 'About Movie 10', 125, '18+', '2025-10-10', '2025-12-10'),
+(211, 'Movie 11', 'About Movie 11', 120, '12+', '2025-10-11', '2025-12-11'),
+(212, 'Movie 12', 'About Movie 12', 90, '6+', '2025-10-12', '2025-12-12'),
+(213, 'Movie 13', 'About Movie 13', 110, '18+', '2025-10-13', '2025-12-13'),
+(214, 'Movie 14', 'About Movie 14', 95, '21+', '2025-10-14', '2025-12-14'),
+(215, 'Movie 15', 'About Movie 15', 130, '12+', '2025-10-15', '2025-12-15'),
+(216, 'Movie 16', 'About Movie 16', 100, '0+', '2025-10-16', '2025-12-16'),
+(217, 'Movie 17', 'About Movie 17', 105, '12+', '2025-10-17', '2025-12-17'),
+(218, 'Movie 18', 'About Movie 18', 115, '6+', '2025-10-18', '2025-12-18'),
+(219, 'Movie 19', 'About Movie 19', 85, '0+', '2025-10-19', '2025-12-19'),
+(220, 'Movie 20', 'About Movie 20', 125, '18+', '2025-10-20', '2025-12-20');
+

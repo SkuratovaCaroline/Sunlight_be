@@ -1,7 +1,9 @@
 package com.sunlight_cinema.Sunlight_cinema;
 
 import com.sunlight_cinema.Sunlight_cinema.model.User;
+import com.sunlight_cinema.Sunlight_cinema.model.Role;
 import com.sunlight_cinema.Sunlight_cinema.repository.UserRepository;
+import com.sunlight_cinema.Sunlight_cinema.repository.RoleRepository;
 import com.sunlight_cinema.Sunlight_cinema.service.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -13,6 +15,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -23,17 +27,32 @@ class UserServiceImplTest {
     private UserRepository userRepository;
 
     @Mock
+    private RoleRepository roleRepository;
+
+    @Mock
     private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserServiceImpl userService;
 
+    private Role customerRole;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+
+        // Мокаем PasswordEncoder
         when(passwordEncoder.encode(any(String.class))).thenAnswer(invocation ->
                 "ENCODED_" + invocation.getArgument(0)
         );
+
+        // Создаём роль CUSTOMER
+        customerRole = new Role();
+        customerRole.setId(3L);
+        customerRole.setRoleName("CUSTOMER");
+
+        // Мокаем RoleRepository
+        when(roleRepository.findByRoleName("CUSTOMER")).thenReturn(Optional.of(customerRole));
     }
 
     // ТЕСТ 1: ПАРАМЕТРИЗОВАННЫЙ — создание разных пользователей
@@ -55,8 +74,7 @@ class UserServiceImplTest {
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
             User u = invocation.getArgument(0);
             u.setId(1L);
-            // ИСПРАВЛЕНО: Заменили GUEST на CUSTOMER
-            u.setRole(User.Role.CUSTOMER);
+            u.setRole(customerRole);
             return u;
         });
 
@@ -67,8 +85,7 @@ class UserServiceImplTest {
         assertNotNull(result.getId());
         assertEquals(username, result.getUsername());
         assertEquals(email, result.getEmail());
-        // ИСПРАВЛЕНО: Заменили GUEST на CUSTOMER
-        assertEquals(User.Role.CUSTOMER, result.getRole());
+        assertEquals("CUSTOMER", result.getRole().getRoleName());
         assertTrue(result.getPasswordHash().startsWith("ENCODED_"));
         verify(userRepository).save(any(User.class));
     }

@@ -1,4 +1,3 @@
-// auth-service/src/main/java/com/sunlight_cinema/Sunlight_cinema/service/UserDetailsServiceImpl.java
 package com.sunlight_cinema.Sunlight_cinema.service;
 
 import com.sunlight_cinema.Sunlight_cinema.model.User;
@@ -25,10 +24,13 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
+        // Теперь роль хранится как сущность Role, используем её поле roleName
+        String roleName = user.getRole().getRoleName();
+
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
                 user.getPasswordHash(),
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + roleName))
         );
     }
 }
