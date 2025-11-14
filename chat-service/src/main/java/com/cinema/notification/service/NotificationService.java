@@ -1,3 +1,13 @@
+package com.cinema.notification.service;
+
+import com.cinema.notification.repository.NotificationRepository;
+import com.cinema.notification.model.Notification;
+import com.cinema.notification.handler.WebSocketHandler;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+
 @Service
 public class NotificationService {
     @Autowired

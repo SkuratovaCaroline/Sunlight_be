@@ -4,6 +4,7 @@ import com.sunlight_cinema.Sunlight_cinema.model.User;
 import com.sunlight_cinema.Sunlight_cinema.model.Role;
 import com.sunlight_cinema.Sunlight_cinema.repository.UserRepository;
 import com.sunlight_cinema.Sunlight_cinema.repository.RoleRepository;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,6 +14,8 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.boot.test.mock.mockito.MockBean;
+
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -27,6 +30,9 @@ public class UserDbConnectionTest {
     private UserRepository userRepository;
 
     @Autowired
+    private EntityManager entityManager;
+
+    @Autowired
     private RoleRepository roleRepository;
 
     @MockBean
@@ -35,6 +41,11 @@ public class UserDbConnectionTest {
     @AfterEach
     public void cleanup() {
         userRepository.deleteAll();
+
+        String resetSequenceSql =
+                "ALTER SEQUENCE users_user_id_seq RESTART WITH 1";
+
+        entityManager.createNativeQuery(resetSequenceSql).executeUpdate();
     }
 
     @Test
