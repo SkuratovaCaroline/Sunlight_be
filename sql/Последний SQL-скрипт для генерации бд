@@ -26,6 +26,7 @@ CREATE TABLE users (
     email VARCHAR(100) UNIQUE,
     first_name VARCHAR(50),
     last_name VARCHAR(50),
+    u_avatar TEXT,  -- путь к файлу аватарки
     role_id BIGINT NOT NULL REFERENCES roles(role_id) ON DELETE RESTRICT,
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -54,7 +55,7 @@ CREATE TABLE films (
     age_rating VARCHAR(10) CHECK (age_rating IN ('0+', '6+', '12+', '18+', '21+')),
     release_year INT,
     genre VARCHAR(100),
-    poster_url VARCHAR(500),
+    f_poster TEXT,  --путь к файлу постера
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     release_date DATE,
     end_date DATE
@@ -203,4 +204,5 @@ INSERT INTO films (film_id, title, description, duration, age_rating, release_da
 (218, 'Movie 18', 'About Movie 18', 115, '6+', '2025-10-18', '2025-12-18'),
 (219, 'Movie 19', 'About Movie 19', 85, '0+', '2025-10-19', '2025-12-19'),
 (220, 'Movie 20', 'About Movie 20', 125, '18+', '2025-10-20', '2025-12-20');
+
 
