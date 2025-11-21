@@ -40,6 +40,26 @@ public class CinemaController {
         return ResponseEntity.ok(cinemaService.getAverageRating(id));
     }
 
+    @PostMapping("/tickets/purchase")
+    public ResponseEntity<Ticket> purchaseTicket(@RequestParam Long userId,
+                                                 @RequestParam Long sessionId,
+                                                 @RequestParam Long seatId,
+                                                 @RequestParam Double price) {
+        return ResponseEntity.ok(cinemaService.purchaseTicket(userId, sessionId, seatId, price));
+    }
+
+    // --- РАСПИСАНИЕ ФИЛЬМА ---
+    @GetMapping("/films/{id}/schedule")
+    public ResponseEntity<List<Session>> getFilmSchedule(@PathVariable Long id) {
+        return ResponseEntity.ok(cinemaService.getFilmSchedule(id));
+    }
+
+     // --- ЗАНЯТЫЕ И СВОБОДНЫЕ МЕСТА ---
+    @GetMapping("/sessions/{id}/seats")
+    public ResponseEntity<Map<String, List<Seat>>> getSeatsStatus(@PathVariable Long id) {
+        return ResponseEntity.ok(cinemaService.getSeatsStatus(id));
+    }
+
     // --- REVIEWS ---
     @PostMapping("/films/{id}/reviews")
     public ResponseEntity<Review> createReview(@PathVariable Long id,
