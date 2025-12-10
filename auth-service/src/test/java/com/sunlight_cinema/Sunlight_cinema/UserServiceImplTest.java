@@ -1,10 +1,10 @@
 package com.sunlight_cinema.Sunlight_cinema;
 
-import com.sunlight_cinema.Sunlight_cinema.model.User;
-import com.sunlight_cinema.Sunlight_cinema.model.Role;
-import com.sunlight_cinema.Sunlight_cinema.repository.UserRepository;
-import com.sunlight_cinema.Sunlight_cinema.repository.RoleRepository;
-import com.sunlight_cinema.Sunlight_cinema.service.UserServiceImpl;
+import com.sunlight_cinema.user.model.User;
+import com.sunlight_cinema.user.model.Role;
+import com.sunlight_cinema.user.repository.UserRepository;
+import com.sunlight_cinema.user.repository.RoleRepository;
+import com.sunlight_cinema.user.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

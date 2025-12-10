@@ -1,4 +1,4 @@
-package com.sunlight_cinema.Sunlight_cinema.model;
+package com.sunlight_cinema.user.model;
 
 import jakarta.persistence.*;
 

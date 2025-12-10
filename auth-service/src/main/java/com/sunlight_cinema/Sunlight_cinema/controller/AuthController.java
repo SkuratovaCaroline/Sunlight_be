@@ -3,79 +3,63 @@ package com.sunlight_cinema.Sunlight_cinema.controller;
 import com.sunlight_cinema.Sunlight_cinema.dto.JwtResponse;
 import com.sunlight_cinema.Sunlight_cinema.dto.LoginRequest;
 import com.sunlight_cinema.Sunlight_cinema.dto.RegisterRequest;
-import com.sunlight_cinema.Sunlight_cinema.model.User;
-import com.sunlight_cinema.Sunlight_cinema.model.Role;
-import com.sunlight_cinema.Sunlight_cinema.service.JwtService;
-import com.sunlight_cinema.Sunlight_cinema.service.UserService;
-import com.sunlight_cinema.Sunlight_cinema.repository.RoleRepository;
-import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.sunlight_cinema.Sunlight_cinema.service.AuthenticationService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Locale;
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin(origins = "http://localhost:3000")
+@RequiredArgsConstructor
 public class AuthController {
 
-    private final UserService userService;
-    private final PasswordEncoder passwordEncoder;
-    private final UserDetailsService userDetailsService;
-    private final RoleRepository roleRepository;
-
-    @Autowired
-    private JwtService jwtService;
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
-    public AuthController(UserService userService,
-                          PasswordEncoder passwordEncoder,
-                          UserDetailsService userDetailsService,
-                          RoleRepository roleRepository) {
-        this.userService = userService;
-        this.passwordEncoder = passwordEncoder;
-        this.userDetailsService = userDetailsService;
-        this.roleRepository = roleRepository;
-    }
-
-    @PostMapping("/hello")
-    public String hello() {
-        return "Hello";
-    }
+    private final AuthenticationService authenticationService;
+    private final MessageSource messageSource;
+    private final HttpServletRequest request;
 
     @PostMapping("/register")
-    public ResponseEntity<User> register(@Valid @RequestBody RegisterRequest request) {
-        User user = new User();
-        user.setUsername(request.username());
-        user.setPasswordHash(passwordEncoder.encode(request.password()));
-        user.setEmail(request.email());
-        user.setFirstName(request.firstName());
-        user.setLastName(request.lastName());
-
-        // Устанавливаем роль CUSTOMER по умолчанию
-        Role customerRole = roleRepository.findByRoleName("CUSTOMER")
-                .orElseThrow(() -> new RuntimeException("Роль CUSTOMER не найдена в БД"));
-        user.setRole(customerRole);
-
-        User created = userService.create(user);
-        return ResponseEntity.ok(created);
+    public ResponseEntity<String> register(@RequestBody RegisterRequest registerRequest) {
+        // ...
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<JwtResponse> login(@RequestBody LoginRequest loginRequest,
+                                             HttpServletResponse response) {
         try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.username(), request.password())
-            );
-            UserDetails userDetails = userDetailsService.loadUserByUsername(request.username());
-            String token = jwtService.generateToken(userDetails);
-            return ResponseEntity.ok(new JwtResponse(token));
+            JwtResponse jwtResponse = authenticationService.login(loginRequest, response);
+            return ResponseEntity.ok(jwtResponse);
         } catch (Exception e) {
-            return ResponseEntity.status(401).body("Invalid credentials");
+            Locale locale = request.getLocale();
+            String msg = messageSource.getMessage("auth.login.error", new Object[]{e.getMessage()}, locale);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new JwtResponse(null, null, msg));
         }
+    }
+
+    // ← Здесь НЕТ лишней закрывающей скобки!
+
+    @PostMapping("/refresh")
+    public ResponseEntity<JwtResponse> refreshToken(HttpServletResponse response) {
+        try {
+            JwtResponse jwtResponse = authenticationService.refreshToken(request, response);
+            return ResponseEntity.ok(jwtResponse);
+        } catch (Exception e) {
+            Locale locale = request.getLocale();
+            String msg = messageSource.getMessage("auth.refresh.error", null, locale);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new JwtResponse(null, null, msg));
+        }
+    }
+
+    @GetMapping("/hello")
+    public String hello() {
+        return "Auth service is alive!";
     }
 }

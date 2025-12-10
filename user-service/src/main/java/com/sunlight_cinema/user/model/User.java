@@ -1,8 +1,9 @@
-package com.sunlight_cinema.Sunlight_cinema.model;
+package com.sunlight_cinema.user.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import com.sunlight_cinema.user.model.Role;
 
 
 @Entity
@@ -34,11 +35,30 @@ public class User {
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 
+    @Column(name = "avatar_url")
+    private String avatarUrl;
+
+    public String getAvatarUrl() { return avatarUrl; }
+    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+
+    @Column(name = "email_verified", nullable = false)
+    private boolean emailVerified = false; // по умолчанию — не подтверждён
+
+    // Геттер и сеттер
+    public boolean isEmailVerified() {
+        return emailVerified;
+    }
+
+    public void setEmailVerified(boolean emailVerified) {
+        this.emailVerified = emailVerified;
+    }
 
 
 

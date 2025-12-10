@@ -1,7 +1,7 @@
-package com.sunlight_cinema.Sunlight_cinema.repository;
+package com.sunlight_cinema.user.repository;
 
-import com.sunlight_cinema.Sunlight_cinema.model.User;
-import com.sunlight_cinema.Sunlight_cinema.model.Role;
+import com.sunlight_cinema.user.model.User;
+import com.sunlight_cinema.user.model.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,5 +12,6 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByUsername(String username);
     Optional<User> findByUsername(String username);
+    Optional<User> findByEmail(String email);
     List<User> findByRole(Role role);
 }

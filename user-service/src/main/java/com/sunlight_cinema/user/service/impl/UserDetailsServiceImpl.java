@@ -1,7 +1,7 @@
-package com.sunlight_cinema.Sunlight_cinema.service;
+package com.sunlight_cinema.user.service.impl;
 
-import com.sunlight_cinema.Sunlight_cinema.model.User;
-import com.sunlight_cinema.Sunlight_cinema.repository.UserRepository;
+import com.sunlight_cinema.user.model.User;
+import com.sunlight_cinema.user.repository.UserRepository;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

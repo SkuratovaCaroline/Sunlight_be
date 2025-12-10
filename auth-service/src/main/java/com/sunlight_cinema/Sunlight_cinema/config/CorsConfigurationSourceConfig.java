@@ -1,7 +1,5 @@
 package com.sunlight_cinema.Sunlight_cinema.config;
 
-
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;

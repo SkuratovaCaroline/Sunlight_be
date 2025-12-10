@@ -1,6 +1,6 @@
-package com.sunlight_cinema.Sunlight_cinema.repository;
+package com.sunlight_cinema.user.repository;
 
-import com.sunlight_cinema.Sunlight_cinema.model.Role;
+import com.sunlight_cinema.user.model.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

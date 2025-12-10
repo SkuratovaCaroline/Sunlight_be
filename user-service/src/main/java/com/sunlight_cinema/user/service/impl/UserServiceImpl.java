@@ -1,15 +1,20 @@
-package com.sunlight_cinema.Sunlight_cinema.service;
+package com.sunlight_cinema.user.service.impl;
 
-import com.sunlight_cinema.Sunlight_cinema.model.User;
-import com.sunlight_cinema.Sunlight_cinema.model.Role;
-import com.sunlight_cinema.Sunlight_cinema.repository.UserRepository;
-import com.sunlight_cinema.Sunlight_cinema.repository.RoleRepository;
+import com.sunlight_cinema.user.model.User;
+import com.sunlight_cinema.user.model.Role;
+import com.sunlight_cinema.user.service.UserService;
+import com.sunlight_cinema.user.repository.UserRepository;
+import com.sunlight_cinema.user.repository.RoleRepository;
+import com.sunlight_cinema.user.dto.UserDto;
+import com.sunlight_cinema.user.dto.UserProfileDto;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -28,26 +33,48 @@ public class UserServiceImpl implements UserService {
         this.roleRepository = roleRepository;
     }
 
+    // ИСПРАВЛЕНО: Возвращает List<UserDto> вместо List<User>
     @Override
-    public List<User> getAll() {
+    public List<UserDto> getAll() {
         log.trace("TRACE: Запрос всех пользователей");
         List<User> users = repo.findAll();
         log.info("INFO: Успешно получено {} пользователей", users.size());
-        return users;
+        // Конвертация в DTO
+        return users.stream().map(UserDto::from).toList();
     }
 
+    // ИСПРАВЛЕНО: Возвращает UserDto вместо User
     @Override
-    public User getById(Long id) {
+    public UserDto getById(Long id) {
         log.trace("TRACE: Поиск пользователя по ID: {}", id);
-        return repo.findById(id)
+        User user = repo.findById(id)
                 .orElseThrow(() -> {
                     log.warn("WARN: Пользователь с ID {} не найден", id);
                     return new RuntimeException("User not found");
                 });
+        // Конвертация в DTO
+        return UserDto.from(user);
     }
 
     @Override
-    public User create(User user) {
+    public UserDto create(UserDto userDto) {
+        return null;
+    }
+
+    @Override
+    public UserDto update(UserDto userDto, MultipartFile avatar) {
+        return null;
+    }
+
+    // Вспомогательный метод для поиска User, используется внутри сервиса
+    private User findUserById(Long id) {
+        return repo.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    // ИСПРАВЛЕНО: Возвращает UserDto вместо User
+    @Override
+    public UserDto create(User user) {
         log.trace("TRACE: Начало создания пользователя: {}", user.getUsername());
 
         if (user.getUsername() == null || user.getUsername().isBlank()) {
@@ -76,12 +103,14 @@ public class UserServiceImpl implements UserService {
 
         User saved = repo.save(user);
         log.info("INFO: Пользователь успешно создан. ID: {}, Роль: {}", saved.getId(), saved.getRole().getRoleName());
-        return saved;
+        // Конвертация в DTO
+        return UserDto.from(saved);
     }
 
+    // ИСПРАВЛЕНО: Возвращает UserDto вместо User. Использование findUserById.
     @Override
-    public User update(Long id, User updatedUser) {
-        User existing = getById(id);
+    public UserDto update(Long id, User updatedUser) {
+        User existing = findUserById(id); // Используем findUserById
 
         if (updatedUser.getUsername() != null
                 && !updatedUser.getUsername().isBlank()
@@ -123,7 +152,8 @@ public class UserServiceImpl implements UserService {
 
         User saved = repo.save(existing);
         log.info("INFO: Пользователь успешно обновлён. ID: {}, Роль: {}", saved.getId(), saved.getRole().getRoleName());
-        return saved;
+        // Конвертация в DTO
+        return UserDto.from(saved);
     }
 
     @Override
@@ -153,5 +183,21 @@ public class UserServiceImpl implements UserService {
                 .map(a -> a.getAuthority().replace("ROLE_", ""))
                 .findFirst()
                 .orElse("UNKNOWN");
+    }
+
+    @Override
+    public List<UserDto> findByName(String name) {
+        return repo.findAll().stream()
+                .filter(u -> u.getFirstName() != null && u.getFirstName().toLowerCase().contains(name.toLowerCase()) ||
+                        u.getLastName() != null && u.getLastName().toLowerCase().contains(name.toLowerCase()))
+                .map(UserDto::from)
+                .toList();
+    }
+
+    // ИСПРАВЛЕНО: Использование findUserById.
+    @Override
+    public UserProfileDto findProfileById(Long id) {
+        User user = findUserById(id); // Используем findUserById
+        return UserProfileDto.from(user);
     }
 }
